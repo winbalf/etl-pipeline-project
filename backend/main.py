@@ -16,28 +16,34 @@ CORS(app)  # Enable CORS
 
 @app.route('/api/weather', methods=['GET'])
 def get_weather_data():
-    db_url = os.getenv("DATABASE_URL")
-    engine = create_engine(db_url)
-    with engine.connect() as connection:
-        df = pd.read_sql('SELECT * FROM weather_data', connection)
-    return jsonify(df.to_dict(orient='records'))
+    try:
+        db_url = os.getenv("DATABASE_URL")
+        engine = create_engine(db_url)
+        with engine.connect() as connection:
+            df = pd.read_sql('SELECT * FROM weather_data', connection)
+        return jsonify(df.to_dict(orient='records'))
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
-def main():
-    api_key = os.getenv("API_KEY")
-    if not api_key:
-        raise ValueError("API_KEY environment variable not set")
+def run_etl():
+    try:
+        api_key = os.getenv("API_KEY")
+        if not api_key:
+            raise ValueError("API_KEY environment variable not set")
 
-    print(f"Using API_KEY: {api_key}")  # Add this line to verify
+        api_url = f"http://api.weatherapi.com/v1/history.json?key={api_key}&q=Adelaide&dt=2024-12-01&end_dt=2024-12-05"
+        db_url = os.getenv("DATABASE_URL")
 
-    api_url = f"http://api.weatherapi.com/v1/history.json?key={api_key}&q=Adelaide&dt=2024-12-01&end_dt=2024-12-05"
-    db_url = "postgresql://postgres:password@db:5432/etl_db"
-
-    raw_data = extract_data(api_url)
-    transformed_data = transform_data(raw_data)
-    load_data(transformed_data, db_url)
+        raw_data = extract_data(api_url)
+        if raw_data:
+            transformed_data = transform_data(raw_data)
+            if transformed_data is not None:
+                load_data(transformed_data, db_url)
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":
-    main()
+    run_etl()
     app.run(host='0.0.0.0', port=5000)

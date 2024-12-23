@@ -9,8 +9,6 @@ services:
       - ./.env # Path to the .env file in the root directory
     depends_on:
       - db
-    environment:
-      - DATABASE_URL=postgresql://postgres:password@db:5432/etl_db
     ports:
       - "5000:5000"
 
