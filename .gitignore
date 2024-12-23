@@ -3,3 +3,8 @@ frontend/node_modules/
 
 # Ignore .env file
 .env
+
+# .gitignore
+__pycache__/
+*.pyc
+*.pyo

@@ -3,16 +3,28 @@ import axios from 'axios';
 
 function App() {
   const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     axios.get('http://localhost:5000/api/weather')
       .then(response => {
         setData(response.data);
+        setLoading(false);
       })
       .catch(error => {
-        console.error('Error fetching data:', error);
+        setError('Error fetching data');
+        setLoading(false);
       });
   }, []);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>{error}</div>;
+  }
 
   return (
     <div className="App">

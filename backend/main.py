@@ -24,8 +24,14 @@ def get_weather_data():
 
 
 def main():
-    api_url = f"http://api.weatherapi.com/v1/history.json?key={os.getenv('API_KEY')}&q=Adelaide&dt=2024-12-01&end_dt=2024-12-05"
-    db_url = os.getenv("DATABASE_URL")
+    api_key = os.getenv("API_KEY")
+    if not api_key:
+        raise ValueError("API_KEY environment variable not set")
+
+    print(f"Using API_KEY: {api_key}")  # Add this line to verify
+
+    api_url = f"http://api.weatherapi.com/v1/history.json?key={api_key}&q=Adelaide&dt=2024-12-01&end_dt=2024-12-05"
+    db_url = "postgresql://postgres:password@db:5432/etl_db"
 
     raw_data = extract_data(api_url)
     transformed_data = transform_data(raw_data)

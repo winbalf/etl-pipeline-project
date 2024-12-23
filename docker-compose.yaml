@@ -5,6 +5,8 @@ services:
     build: ./backend
     volumes:
       - ./backend:/app
+    env_file:
+      - ./.env # Path to the .env file in the root directory
     depends_on:
       - db
     environment:
