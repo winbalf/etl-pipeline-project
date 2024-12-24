@@ -7,8 +7,13 @@ import pandas as pd
 from sqlalchemy import create_engine
 import os
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()  # Load environment variables from .env file
+
+# Configure logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS
@@ -23,6 +28,7 @@ def get_weather_data():
             df = pd.read_sql('SELECT * FROM weather_data', connection)
         return jsonify(df.to_dict(orient='records'))
     except Exception as e:
+        logging.error(f"An error occurred while fetching weather data: {e}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -35,13 +41,15 @@ def run_etl():
         api_url = f"http://api.weatherapi.com/v1/history.json?key={api_key}&q=Adelaide&dt=2024-12-01&end_dt=2024-12-05"
         db_url = os.getenv("DATABASE_URL")
 
+        logging.info("Starting ETL process")
         raw_data = extract_data(api_url)
         if raw_data:
             transformed_data = transform_data(raw_data)
             if transformed_data is not None:
                 load_data(transformed_data, db_url)
+        logging.info("ETL process completed successfully")
     except Exception as e:
-        print(f"An error occurred: {e}")
+        logging.error(f"An error occurred: {e}")
 
 
 if __name__ == "__main__":

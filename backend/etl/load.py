@@ -3,20 +3,27 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 import os
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()  # Load environment variables from .env file
+
+# Configure logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def load_data(df, db_url):
     try:
+        logging.info("Loading data into the database")
         engine = create_engine(db_url)
         with engine.connect() as connection:
             df.to_sql('weather_data', con=connection,
                       if_exists='append', index=False)
+        logging.info("Data loading successful")
     except SQLAlchemyError as e:
-        print(f"Database error: {e}")
+        logging.error(f"Database error: {e}")
     except Exception as e:
-        print(f"An error occurred during loading: {e}")
+        logging.error(f"An error occurred during loading: {e}")
 
 
 if __name__ == "__main__":

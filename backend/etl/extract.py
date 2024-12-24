@@ -1,19 +1,26 @@
 import os
 import requests
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()  # Load environment variables from .env file
+
+# Configure logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def extract_data(api_url):
     try:
+        logging.info(f"Extracting data from {api_url}")
         response = requests.get(api_url)
         response.raise_for_status()
+        logging.info("Data extraction successful")
         return response.json()
     except requests.exceptions.HTTPError as http_err:
-        print(f"HTTP error occurred: {http_err}")
+        logging.error(f"HTTP error occurred: {http_err}")
     except Exception as err:
-        print(f"An error occurred: {err}")
+        logging.error(f"An error occurred: {err}")
 
 
 if __name__ == "__main__":

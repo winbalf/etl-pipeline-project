@@ -1,8 +1,14 @@
 import pandas as pd
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 def transform_data(raw_data):
     try:
+        logging.info("Transforming data")
         processed_data = []
         for day in raw_data['forecast']['forecastday']:
             for hour in day['hour']:
@@ -12,11 +18,12 @@ def transform_data(raw_data):
                     "humidity": hour["humidity"],
                     "timestamp": hour["time"]
                 })
+        logging.info("Data transformation successful")
         return pd.DataFrame(processed_data)
     except KeyError as e:
-        print(f"Key error: {e}")
+        logging.error(f"Key error: {e}")
     except Exception as e:
-        print(f"An error occurred during transformation: {e}")
+        logging.error(f"An error occurred during transformation: {e}")
 
 
 if __name__ == "__main__":
