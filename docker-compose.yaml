@@ -14,9 +14,13 @@ services:
 
   db:
     build: ./database
+    # image: postgres:latest
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
+      POSTGRES_DB: etl_db
+    # volumes:
+    #   - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
 

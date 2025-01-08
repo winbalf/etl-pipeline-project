@@ -8,8 +8,10 @@ from sqlalchemy import create_engine
 import os
 from dotenv import load_dotenv
 import logging
+import requests
 
-load_dotenv()  # Load environment variables from .env file
+# Load environment variables from .env file
+load_dotenv()  
 
 # Configure logging
 logging.basicConfig(level=logging.INFO,
@@ -32,20 +34,52 @@ def get_weather_data():
         return jsonify({"error": str(e)}), 500
 
 
+def check_api_status(api_url):
+    try:
+        response = requests.get(api_url)
+        if response.status_code == 200:
+            logging.info("API is working")
+            return True
+        else:
+            logging.error(f"API returned status code {response.status_code}")
+            return False
+    except requests.RequestException as e:
+        logging.error(f"An error occurred while checking API status: {e}")
+        return False
+
+
+def validate_data(df):
+    if df.isnull().values.any():
+        logging.error("Data contains null values")
+        return False
+    if not all(df.columns == ["city", "temperature", "humidity", "timestamp", "version"]):
+        logging.error("Data schema mismatch")
+        return False
+    return True
+
 def run_etl():
     try:
         api_key = os.getenv("API_KEY")
-        if not api_key:
-            raise ValueError("API_KEY environment variable not set")
-
-        api_url = f"http://api.weatherapi.com/v1/history.json?key={api_key}&q=Adelaide&dt=2024-12-01&end_dt=2024-12-05"
+        api_base_url = os.getenv("API_BASE_URL")
+        api_city = os.getenv("API_CITY")
+        api_start_date = os.getenv("API_START_DATE")
+        api_end_date = os.getenv("API_END_DATE")
         db_url = os.getenv("DATABASE_URL")
+        version = 1  # Set the version number
+
+        if not api_key or not api_base_url or not api_city or not api_start_date or not api_end_date:
+            raise ValueError("One or more API environment variables are not set")
+
+        api_url = f"{api_base_url}?key={api_key}&q={api_city}&dt={api_start_date}&end_dt={api_end_date}"
+
+        if not check_api_status(api_url):
+            raise ValueError("API is not working")
 
         logging.info("Starting ETL process")
         raw_data = extract_data(api_url)
         if raw_data:
-            transformed_data = transform_data(raw_data)
-            if transformed_data is not None:
+            transformed_data = transform_data(raw_data, version)
+            if transformed_data is not None and validate_data(transformed_data):
                 load_data(transformed_data, db_url)
         logging.info("ETL process completed successfully")
     except Exception as e:

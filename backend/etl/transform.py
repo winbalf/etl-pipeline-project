@@ -6,7 +6,7 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
 
-def transform_data(raw_data):
+def transform_data(raw_data, version):
     try:
         logging.info("Transforming data")
         processed_data = []
@@ -16,7 +16,8 @@ def transform_data(raw_data):
                     "city": raw_data["location"]["name"],
                     "temperature": hour["temp_c"],
                     "humidity": hour["humidity"],
-                    "timestamp": hour["time"]
+                    "timestamp": hour["time"],
+                    "version": version
                 })
         logging.info("Data transformation successful")
         return pd.DataFrame(processed_data)
@@ -25,6 +26,14 @@ def transform_data(raw_data):
     except Exception as e:
         logging.error(f"An error occurred during transformation: {e}")
 
+def validate_data(df):
+    if df.isnull().values.any():
+        logging.error("Data contains null values")
+        return False
+    if not all(df.columns == ["city", "temperature", "humidity", "timestamp"]):
+        logging.error("Data schema mismatch")
+        return False
+    return True
 
 if __name__ == "__main__":
     sample_data = {
